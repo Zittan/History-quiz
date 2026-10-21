@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Исторические викторины</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="logo"><span class="logo-mark">📜</span><span>Исторические викторины</span></a>
+    <nav class="header-nav"><a href="index.html">Все викторины</a></nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <p class="hero-kicker">Исторический клуб</p>
+    <h1 class="hero-title">Викторины по истории</h1>
+    <p class="hero-sub">Проверьте знания о событиях, эпохах и людях, которые изменили ход истории.</p>
+    <div class="hero-stats" id="heroStats"></div>
+  </section>
+
+  <section class="catalog">
+    <div class="filters" id="filters"></div>
+    <div class="quiz-grid" id="quizGrid"></div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  Каждая викторина — отдельный HTML-файл. Чтобы добавить новую, создайте страницу по образцу и добавьте карточку в каталог.
+</footer>
+
+<script>
+/* =========================================================
+   КАТАЛОГ ВИКТОРИН
+
+   Чтобы добавить викторину:
+   1. Создайте отдельный HTML-файл (например, quiz-new.html)
+      по образцу quiz-ancient-rus.html и заполните window.QUIZ_DATA.
+   2. Добавьте объект в массив QUIZZES ниже, указав file.
+   ========================================================= */
+
+const QUIZZES = [
+  {
+    id: 'ancient-rus',
+    file: 'quiz-ancient-rus.html',
+    title: 'Древняя Русь',
+    description: 'Князья, крещение, летописи и первые законы — базовые знания о рождении русского государства.',
+    category: 'Средневековье',
+    difficulty: 'Лёгкий',
+    icon: '🏰',
+    count: 5
+  },
+  {
+    id: 'wwii',
+    file: 'Peter I.html',
+    title: 'Петр 1',
+    description: 'Ключевые даты, битвы и имена',
+    category: 'XVIII век',
+    difficulty: 'Средний',
+    icon: '🎖️',
+    count: 5
+  },
+  {
+    id: 'altai-history',
+    file: 'quiz-altai-history.html.html',
+    title: 'История Алтайского края',
+    description: 'Изобретатели, космонавты, писатели и актёры — люди, прославившие Алтай.',
+    category: 'Региональная история',
+    difficulty: 'Средний',
+    icon: '⛰️',
+    count: 5
+  }
+];
+
+/* =========================================================
+   ЛОГИКА КАТАЛОГА
+   ========================================================= */
+
+let activeCategory = 'Все';
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => (
+    { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
+  ));
+}
+
+function diffClass(d){
+  if (d === 'Лёгкий') return 'easy';
+  if (d === 'Сложный') return 'hard';
+  return 'medium';
+}
+
+function renderStats(){
+  const totalQuestions = QUIZZES.reduce((sum, q) => sum + q.count, 0);
+  const categories = new Set(QUIZZES.map(q => q.category));
+  document.getElementById('heroStats').innerHTML = `
+    <div><b>${QUIZZES.length}</b><span>викторин</span></div>
+    <div><b>${totalQuestions}</b><span>вопросов</span></div>
+    <div><b>${categories.size}</b><span>тем</span></div>
+  `;
+}
+
+function renderFilters(){
+  const categories = ['Все', ...new Set(QUIZZES.map(q => q.category))];
+  document.getElementById('filters').innerHTML = categories.map(c => `
+    <button class="chip ${c === activeCategory ? 'active' : ''}" data-cat="${escapeHtml(c)}">
+      ${escapeHtml(c)}
+    </button>`).join('');
+}
+
+function renderGrid(){
+  const grid = document.getElementById('quizGrid');
+  const list = activeCategory === 'Все'
+    ? QUIZZES
+    : QUIZZES.filter(q => q.category === activeCategory);
+
+  if (!list.length){
+    grid.innerHTML = '<p class="empty">В этой категории пока нет викторин.</p>';
+    return;
+  }
+
+  grid.innerHTML = list.map(q => `
+    <a class="quiz-card" href="${escapeHtml(q.file)}">
+      <div class="quiz-card-icon">${q.icon || '📜'}</div>
+      <div class="quiz-card-body">
+        <div class="quiz-card-tags">
+          <span class="tag">${escapeHtml(q.category)}</span>
+          <span class="tag diff-${diffClass(q.difficulty)}">${escapeHtml(q.difficulty)}</span>
+        </div>
+        <h3>${escapeHtml(q.title)}</h3>
+        <p>${escapeHtml(q.description)}</p>
+        <div class="quiz-card-meta">
+          <span>${q.count} вопросов</span>
+          <span class="go">Начать →</span>
+        </div>
+      </div>
+    </a>
+  `).join('');
+}
+
+document.getElementById('filters').addEventListener('click', e => {
+  const btn = e.target.closest('.chip');
+  if (!btn) return;
+  activeCategory = btn.dataset.cat;
+  document.querySelectorAll('.chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.cat === activeCategory);
+  });
+  renderGrid();
+});
+
+renderStats();
+renderFilters();
+renderGrid();
+</script>
+
+</body>
+</html>
