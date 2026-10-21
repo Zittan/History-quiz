@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Викторина «Выдающиеся уроженцы Алтайского края»</title>
+<style>
+  :root{
+    --ink:#1c2733; --brand:#0f3d5c; --accent:#1d7a6c; --line:#dbe4ee;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:#eef2f7; color:var(--ink); line-height:1.5; min-height:100vh;
+  }
+  header{
+    background:linear-gradient(135deg,#0f3d5c 0%,#1d7a6c 100%);
+    color:#fff; padding:26px 20px 24px; text-align:center;
+  }
+  header h1{margin:0 0 8px; font-size:clamp(18px,3.6vw,26px); line-height:1.25}
+  header p{margin:0; opacity:.9; font-size:14px}
+
+  .container{max-width:880px; margin:0 auto; padding:22px 16px 60px}
+  .hidden{display:none !important}
+  .card{background:#fff; border-radius:16px; padding:24px; box-shadow:0 4px 18px rgba(20,40,70,.08)}
+
+  .btn{
+    font:inherit; font-weight:700; padding:13px 28px; border-radius:999px;
+    border:none; cursor:pointer; transition:background .15s, transform .1s, opacity .15s;
+  }
+  .btn:active:not(:disabled){transform:scale(.98)}
+  .btn.primary{background:var(--accent); color:#fff; box-shadow:0 6px 16px rgba(29,122,108,.3)}
+  .btn.primary:hover:not(:disabled){background:#166254}
+  .btn.ghost{background:#fff; color:#5b6b7d; border:1px solid #d5dee8}
+  .btn.ghost:hover:not(:disabled){background:#f4f7fa; color:#33475b}
+  .btn:disabled{opacity:.45; cursor:not-allowed; box-shadow:none}
+
+  /* ---------- старт ---------- */
+  .rules{list-style:none; padding:0; margin:16px 0 22px}
+  .rules li{
+    padding:9px 14px; border-radius:10px; background:#f4f8fc; margin-bottom:8px;
+    font-size:14.5px; border-left:4px solid var(--accent);
+  }
+  .rules li.zero{border-left-color:#c9a227}
+  .team-count-row{
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    margin-bottom:16px; font-size:13px; font-weight:700; color:#5b6b7d;
+    text-transform:uppercase; letter-spacing:.04em;
+  }
+  .team-count-row select{
+    padding:9px 14px; border-radius:10px; border:1px solid var(--line);
+    font:inherit; font-size:15px; background:#fff; color:var(--ink);
+    cursor:pointer;
+  }
+  .team-count-row select:focus{
+    outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(29,122,108,.15);
+  }
+  .name-inputs{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:12px; margin-bottom:22px;
+  }
+  .name-inputs label{
+    display:block; font-size:12px; font-weight:700; color:#5b6b7d;
+    text-transform:uppercase; letter-spacing:.04em;
+  }
+  .name-inputs input{
+    width:100%; margin-top:6px; padding:11px 14px; border:1px solid var(--line);
+    border-radius:10px; font:inherit; font-size:15px; background:#fff;
+    border-left-width:5px;
+  }
+  .name-inputs input:focus{
+    outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(29,122,108,.15);
+  }
+  .dot{
+    display:inline-block; width:10px; height:10px; border-radius:50%;
+    margin-right:6px; vertical-align:baseline;
+  }
+
+  /* ---------- табло ---------- */
+  .scoreboard{
+    display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px;
+  }
+  .team-card{
+    flex:1 1 140px; background:#fff; border-radius:14px; padding:12px 15px;
+    border:2px solid #e6ecf3; border-top:5px solid var(--tc);
+    box-shadow:0 3px 12px rgba(20,40,70,.07);
+    transition:.2s; overflow:hidden;
+  }
+  .team-card.active{
+    background:var(--tsoft); border-color:var(--tc);
+    transform:translateY(-2px);
+    box-shadow:0 8px 22px rgba(20,40,70,.18);
+  }
+  .team-card .tname{
+    font-size:12px; font-weight:800; color:var(--tc); text-transform:uppercase;
+    letter-spacing:.05em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .team-card .tscore{
+    font-size:30px; font-weight:800; color:var(--tc); line-height:1.15;
+    font-variant-numeric:tabular-nums;
+  }
+  .team-card .tscore.neg{color:#c0392b}
+  .team-card .tstatus{
+    font-size:11.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+    color:var(--tc); opacity:0; transition:.2s;
+  }
+  .team-card.active .tstatus{opacity:1}
+
+  /* ---------- доска ---------- */
+  .turn-hint{
+    padding:10px 16px; border-radius:12px; font-size:14.5px; text-align:center;
+    border:1px solid transparent; margin-bottom:14px;
+  }
+  .turn-hint b{font-weight:800}
+  .board-section{
+    background:#fff; border-radius:14px; padding:16px 18px; margin-bottom:14px;
+    box-shadow:0 3px 12px rgba(20,40,70,.07);
+  }
+  .board-head{
+    display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+    padding-left:10px; border-left:4px solid; margin-bottom:12px; flex-wrap:wrap;
+  }
+  .bs-title{font-size:16px; font-weight:800}
+  .bs-meta{font-size:12.5px; color:#7b8a9c; font-weight:600}
+  .cells{display:grid; grid-template-columns:repeat(5,1fr); gap:8px}
+  @media (max-width:560px){ .cells{grid-template-columns:repeat(4,1fr)} }
+  .cell{
+    aspect-ratio:1.55/1; border-radius:11px; border:2px solid;
+    font-family:inherit; cursor:pointer; transition:.15s;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+  }
+  .cell .num{font-size:clamp(16px,4vw,22px); font-weight:800; line-height:1}
+  .cell .pts{font-size:10.5px; font-weight:700; opacity:.7}
+  .cell.r1{background:#e8f1f8; border-color:#b9d3e8; color:#1b5e8a}
+  .cell.r1:hover:not(:disabled){background:#d5e6f5; transform:translateY(-2px); box-shadow:0 4px 10px rgba(27,94,138,.18)}
+  .cell.r2{background:#e9f6f2; border-color:#a8d9cd; color:#1d7a6c}
+  .cell.r2:hover:not(:disabled){background:#d6efe8; transform:translateY(-2px); box-shadow:0 4px 10px rgba(29,122,108,.18)}
+  .cell.r3{background:#f0ebfa; border-color:#cfc3ec; color:#5b3fa8}
+  .cell.r3:hover:not(:disabled){background:#e4dbf7; transform:translateY(-2px); box-shadow:0 4px 10px rgba(91,63,168,.18)}
+  .cell.used{background:#f0f2f5 !important; border-color:#e0e4ea !important; color:#b8c0cc !important; cursor:default; transform:none !important; box-shadow:none !important}
+  .cell.used .num{text-decoration:line-through}
+  .board-footer{display:flex; justify-content:center; margin-top:8px}
+
+  /* ---------- вопрос ---------- */
+  .q-head{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px}
+  .q-counter{font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#7b8a9c}
+  .badge{border-radius:999px; padding:4px 13px; font-size:12px; font-weight:700}
+  .badge.r1{background:#e8f1f8; color:#1b5e8a}
+  .badge.r2{background:#e9f6f2; color:#1d7a6c}
+  .badge.r3{background:#f0ebfa; color:#5b3fa8}
+  .turn-banner{padding:9px 16px; border-radius:11px; font-size:15px; text-align:center; border:1px solid transparent; margin-bottom:14px}
+  .turn-banner b{font-weight:800}
+
+  .timer-wrap{display:flex; align-items:center; gap:12px; margin:0 0 20px}
+  .timer-bar{flex:1; height:12px; background:#e6ecf3; border-radius:999px; overflow:hidden}
+  .timer-fill{
+    height:100%; width:100%; border-radius:999px;
+    background:linear-gradient(90deg,#1d7a6c,#3fbfa0);
+    transition:width .1s linear, background .3s;
+  }
+  .timer-fill.warn{background:linear-gradient(90deg,#e0a030,#f0c060)}
+  .timer-fill.danger{background:linear-gradient(90deg,#c0392b,#e06050)}
+  .timer-num{
+    font-variant-numeric:tabular-nums; font-weight:800; font-size:21px;
+    color:var(--brand); min-width:2.2ch; text-align:right;
+  }
+  .timer-num.danger{color:#c0392b}
+
+  .q-text{margin:0 0 18px; font-size:17px; line-height:1.55}
+
+  /* ---------- изображение в вопросе ---------- */
+  .q-image-wrap{margin:0 0 20px; text-align:center}
+  .q-image{
+    max-width:100%; max-height:340px; border-radius:12px;
+    border:1px solid #dbe4ee; box-shadow:0 2px 10px rgba(20,40,70,.06);
+    display:block; margin:0 auto;
+  }
+  .q-image-placeholder{
+    max-width:420px; margin:0 auto; padding:24px 16px;
+    border:2px dashed #c9d0da; border-radius:12px; background:#f8fafc;
+    color:#7b8a9c; font-size:13.5px; line-height:1.6;
+  }
+  .q-image-placeholder b{color:#5b6b7d}
+
+  .options{display:flex; flex-direction:column; gap:9px}
+  .options.row{flex-direction:row; gap:12px}
+  .options.row .opt{justify-content:center; font-weight:700; font-size:16px}
+  .opt{
+    display:flex; gap:11px; align-items:flex-start; padding:11px 15px;
+    border:1px solid #dbe4ee; border-radius:11px; font-size:15px; background:#fff;
+    transition:.15s;
+  }
+  .opt .ltr{font-weight:800; color:#1d7a6c; flex:0 0 auto}
+  .opt.correct{border-color:#5fbf87; background:#e7f7ec}
+  .opt.correct .ltr{color:#1f8a4c}
+  .open-answer-hint{padding:16px; border:1px dashed #c9d0da; border-radius:11px; text-align:center; color:#7b8a9c; font-size:14px; background:#f8fafc}
+
+  .reveal-box{margin-top:14px; padding:12px 16px; border-radius:11px; background:#f4f8fc; border:1px solid #cfdae6; color:#33475b; font-size:14.5px}
+  .reveal-box .note{margin-top:6px; font-size:13.5px; font-weight:400; color:#5b6b7d}
+
+  .verdict-bar{display:flex; gap:10px; flex-wrap:wrap; margin-top:20px}
+  .vbtn{
+    flex:1; min-width:130px; padding:13px 18px; border-radius:12px; border:2px solid;
+    font:inherit; font-weight:800; font-size:15px; cursor:pointer; transition:.15s;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .vbtn:active{transform:scale(.98)}
+  .v-correct{background:#e7f7ec; border-color:#5fbf87; color:#1f6b40}
+  .v-correct:hover{background:#d3f0dd}
+  .v-wrong{background:#fdeceb; border-color:#e08a80; color:#a53226}
+  .v-wrong:hover{background:#fad8d5}
+  .v-noanswer{background:#f0f2f5; border-color:#c9d0da; color:#5b6b7d}
+  .v-noanswer:hover{background:#e4e8ee}
+
+  .reveal-row{display:flex; justify-content:flex-end; margin-top:10px}
+  .reveal-btn{
+    background:none; border:none; color:#7b8a9c; font:inherit; font-size:13px;
+    cursor:pointer; text-decoration:underline; padding:4px;
+  }
+  .reveal-btn:hover{color:#33475b}
+  .reveal-btn:disabled{opacity:.5; cursor:default; text-decoration:none}
+
+  .feedback{margin-top:16px; padding:14px 16px; border-radius:12px; font-size:15px; line-height:1.5}
+  .feedback.ok{background:#e7f7ec; color:#1f6b40; border:1px solid #a8d9b8}
+  .feedback.bad{background:#fdeceb; color:#a53226; border:1px solid #f0b8b2}
+  .feedback.neutral{background:#f4f6f9; color:#33475b; border:1px solid #d8dee7}
+
+  .q-actions{display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-top:18px}
+  .undo-link{
+    background:none; border:none; color:#7b8a9c; font:inherit; font-size:13.5px;
+    cursor:pointer; text-decoration:underline; padding:6px;
+  }
+  .undo-link:hover{color:#33475b}
+
+  /* ---------- финал ---------- */
+  .winner{text-align:center; font-size:20px; font-weight:800; color:var(--brand); margin:6px 0 22px}
+  .final-scores{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:14px;
+  }
+  .final-team{
+    border:2px solid var(--tc); border-top:6px solid var(--tc);
+    border-radius:14px; padding:16px; text-align:center; background:var(--tsoft);
+  }
+  .ft-name{font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--tc);
+           white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .ft-score{font-size:42px; font-weight:800; line-height:1.15; font-variant-numeric:tabular-nums; color:var(--tc)}
+  .ft-stats{font-size:12.5px; color:#5b6b7d; margin-top:4px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Викторина «Выдающиеся уроженцы Алтайского края»</h1>
+  <p>2–6 команд · 40 вопросов · фото в рубрике I · 30 секунд на ответ</p>
+</header>
+
+<main class="container">
+
+  <!-- СТАРТ -->
+  <section id="startScreen" class="card">
+    <h2 style="margin-top:0;color:var(--brand)">Подготовка к игре</h2>
+    <p style="margin-top:0;color:#5b6b7d">
+      Команды ходят <b>по очереди</b> и выбирают любой неиспользованный вопрос на доске.
+      На ответ даётся <b>30 секунд</b>. За неверный ответ и за «Нет ответа» баллы не снимаются.
+    </p>
+    <ul class="rules">
+      <li>Рубрика I — верный ответ <b>+1 балл</b> (15 вопросов)</li>
+      <li>Рубрика II — верный ответ <b>+2 балла</b> (15 вопросов)</li>
+      <li>Рубрика III — верный ответ <b>+4 балла</b> (10 вопросов)</li>
+      <li class="zero">Неверно / «Нет ответа» / время вышло — <b>0 баллов</b> (без штрафа)</li>
+    </ul>
+
+    <div class="team-count-row">
+      <label for="teamCount">Количество команд</label>
+      <select id="teamCount">
+        <option value="2" selected>2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+      </select>
+    </div>
+
+    <div class="name-inputs" id="nameInputs"></div>
+
+    <button id="startBtn" class="btn primary">Начать игру</button>
+  </section>
+
+  <!-- ИГРА -->
+  <section id="gameScreen" class="hidden">
+    <div class="scoreboard" id="scoreboard"></div>
+
+    <div id="boardView">
+      <div class="turn-hint" id="turnHint"></div>
+      <div id="board"></div>
+      <div class="board-footer">
+        <button id="endGameBtn" class="btn ghost">Завершить игру</button>
+      </div>
+    </div>
+
+    <div id="questionView" class="card hidden"></div>
+  </section>
+
+  <!-- ФИНАЛ -->
+  <section id="resultScreen" class="card hidden"></section>
+
+</main>
+
+<script>
+/* ============================ ДАННЫЕ ВИКТОРИНЫ ============================ */
+/*
+  ДЛЯ ДОБАВЛЕНИЯ ФОТО к вопросу рубрики I:
+  укажите URL изображения в поле image, например:
+    image: "https://example.com/photo.jpg"
+  Если поле image пустое ("") — будет показана заглушка.
+*/
+const QUESTIONS = [
+   /* --- Рубрика I: 15 вопросов по 1 баллу --- */
+  { id:1, rubric:1, points:1, type:'mc',
+    image:"yuri-kondratyuk.jpg",
+    text:"Учёный-самоучка, один из основоположников космонавтики, рассчитавший оптимальную траекторию полёта к Луне. В 1929–1930 гг. построил знаменитый элеватор «Мастодонт» без единого гвоздя в Камне-на-Оби. В его честь названа улица в Камне-на-Оби.",
+    options:["Константин Циолковский","Сергей Королев","Юрий Кондратюк","Михаил Янгель"], correct:2 },
+  { id:2, rubric:1, points:1, type:'mc',
+    image:"ekaterina-savinova.jpg",
+    text:"Советская актриса, заслуженная артистка РСФСР, исполнительница главной роли в фильме «Приходите завтра…». Родилась в селе Ельцовка Алтайского края. Погибла в молодом возрасте под колёсами поезда.",
+    options:["Нина Усатова","Екатерина Савинова","Ирина Мирошниченко","Лариса Буркова"], correct:1 },
+  { id:3, rubric:1, points:1, type:'mc',
+    image:"ivan-pyrjev.jpg",
+    text:"Советский кинорежиссёр, сценарист, народный артист СССР, шестикратный лауреат Сталинской премии, автор фильмов «Кубанские казаки», «Свинарка и пастух». Родился в селе Камень (ныне Камень-на-Оби) Алтайского края.",
+    options:["Владимир Хотиненко","Михаил Евдокимов","Иван Пырьев","Александр Панкратов-Чёрный"], correct:2 },
+  { id:4, rubric:1, points:1, type:'mc',
+    image:"mikhail-evdokimov.jpg",
+    text:"Артист эстрады и политик, губернатор Алтайского края (2004–2005). Вырос в селе Верх-Обское Смоленского района Алтайского края.",
+    options:["Алексей Булдаков","Михаил Евдокимов","Владимир Хотиненко","Геннадий Бачинский"], correct:1 },
+  { id:5, rubric:1, points:1, type:'mc',
+    image:"aleksandr-pankratov-chyorny.jpg",
+    text:"Актёр и кинорежиссёр, народный артист РФ, известен по фильмам «Покровские ворота», «Человек с бульвара Капуцинов». Родился в селе Конёво Алтайского края.",
+    options:["Александр Панкратов-Чёрный","Валерий Золотухин","Сергей Серов","Владимир Кашпур"], correct:0 },
+  { id:6, rubric:1, points:1, type:'mc',
+    image:"aleksey-buldakov.jpg",
+    text:"Российский актёр, известный комедийными ролями, в том числе генерала Иволгина в фильмах «Особенности национальной охоты», «Особенности национальной рыбалки» и других. Родился в посёлке Макаровка Ключевского района Алтайского края.",
+    options:["Александр Панкратов-Чёрный","Михаил Евдокимов","Алексей Булдаков","Вячеслав Зайцев"], correct:2 },
+  { id:7, rubric:1, points:1, type:'mc',
+    image:"nina-usatova.jpg",
+    text:"Советская и российская актриса театра и кино, народная артистка РФ, лауреат двух премий «Ника» и «Золотой орёл». Родилась в селе Озёрки Алтайского края.",
+    options:["Нина Усатова","Ирина Мирошниченко","Екатерина Савинова","Галина Коньшина"], correct:0 },
+  { id:8, rubric:1, points:1, type:'mc',
+    image:"raisa-gorbachyova.jpg",
+    text:"Жена одного из руководителей СССР, уроженка города Рубцовска Алтайского края.",
+    options:["Раиса Горбачёва","Вера Брежнева","Нина Хрущёва","Татьяна Андропова"], correct:0 },
+  { id:9, rubric:1, points:1, type:'mc',
+    image:"vasiliy-lazarev.jpg",
+    text:"Советский и российский космонавт, Герой Советского Союза, совершил полёт на корабле «Союз-12» в 1973 году. Родился в селе Порошино Кытмановского района Алтайского края.",
+    options:["Василий Лазарев","Герман Титов","Алексей Леонов","Владимир Клочков"], correct:0 },
+  { id:10, rubric:1, points:1, type:'mc',
+    image:"vladimir-kashpur.jpg",
+    text:"Советский и российский актёр театра и кино, народный артист РСФСР, известен по фильмам «Живые и мёртвые», «Тени исчезают в полдень». Родился в селе Баево Алтайского края.",
+    options:["Александр Панкратов-Чёрный","Сергей Серов","Валерий Золотухин","Владимир Кашпур"], correct:3 },
+  { id:11, rubric:1, points:1, type:'mc',
+    image:"aleksey-smertin.jpg",
+    text:"Советский и российский футболист, полузащитник, игрок сборной России и английского «Чарльтона». Родился в Барнауле. В честь него названы парк и спортивная школа в Барнауле.",
+    options:["Алексей Смертин","Владимир Смирнов","Георгий Исаков","Антон Петров"], correct:0 },
+  { id:12, rubric:1, points:1, type:'mc',
+    image:"vladimir-potkin.jpg",
+    text:"Конструктор, создатель знаменитого российского танка Т-90, названного «танковым Калашниковым». Родился в селе Калманка Алтайского края.",
+    options:["Михаил Кошкин","Михаил Калашников","Александр Морозов","Владимир Поткин"], correct:3 },
+  { id:13, rubric:1, points:1, type:'mc',
+    image:"vladimir-khotinenko.jpg",
+    text:"Советский кинорежиссёр, народный артист РФ, автор фильмов «Макаров», «Мусульманин», «72 метра», «Поп». Родился в Славгороде Алтайского края.",
+    options:["Владимир Хотиненко","Иван Пырьев","Александр Панкратов-Чёрный","Михаил Евдокимов"], correct:0 },
+  { id:14, rubric:1, points:1, type:'mc',
+    image:"gennadiy-bachinskiy.jpg",
+    text:"Российский радио- и телеведущий, генеральный продюсер радио «MAXIMUM». Родился в городе Яровое Алтайского края.",
+    options:["Лев Квин","Алексей Смертин","Геннадий Бачинский","Сергей Серов"], correct:2 },
+  { id:15, rubric:1, points:1, type:'mc',
+    image:"viktor-galazin.jpg",
+    text:"Один из создателей отечественной навигационной системы ГЛОНАСС, заслуженный работник геодезии и картографии. Родился в Барнауле.",
+    options:["Виктор Галазин","Михаил Рязанский","Геннадий Сакович","Владимир Поткин"], correct:0 },
+
+  /* --- Рубрика II: 15 вопросов по 2 балла --- */
+  { id:16, rubric:2, points:2, type:'text',
+    text:"Создатель всемирно известного автомата, конструктор стрелкового оружия, дважды Герой Социалистического Труда. Родился в селе Курья Алтайского края.",
+    show:"Калашников (М. Т. Калашников)", keys:["калашников"] },
+  { id:17, rubric:2, points:2, type:'text',
+    text:"Писатель, актёр и кинорежиссёр, автор фильмов «Калина красная», «Печки-лавочки». Родился в селе Сростки Бийского района Алтайского края. В Бийске его именем названа привокзальная площадь.",
+    show:"Шукшин (В. М. Шукшин)", keys:["шукшин"] },
+  { id:18, rubric:2, points:2, type:'text',
+    text:"Лётчик-космонавт, второй человек в космосе. Совершил полёт длительностью более суток, установив рекорд самого молодого космонавта (25 лет). Родился в селе Верх-Жилино Косихинского района Алтайского края.",
+    show:"Титов (Г. С. Титов)", keys:["титов"] },
+  { id:19, rubric:2, points:2, type:'text',
+    text:"Создатель первой в России паровой машины и первого в мире двухцилиндрового парового двигателя. Работал на Алтае, в Барнауле. В его честь назван Алтайский государственный технический университет и улица в Барнауле.",
+    show:"Ползунов (И. И. Ползунов)", keys:["ползунов"] },
+  { id:20, rubric:2, points:2, type:'text',
+    text:"Советский учёный-садовод, селекционер, академик ВАСХНИЛ, Герой Социалистического Труда. Вывел 128 сортов плодово-ягодных культур, приспособленных к сибирским условиям, инициатор введения в культуру облепихи. В Барнауле в его честь назван НИИ садоводства Сибири.",
+    show:"Лисавенко (М. А. Лисавенко)", keys:["лисавенко"] },
+  { id:21, rubric:2, points:2, type:'text',
+    text:"Горный инженер, изобретатель, организатор горнозаводского производства на Алтае. В 1809 году построил одну из первых в России чугунно-рельсовую дорогу. Был начальником Колывано-Воскресенских заводов и Томским гражданским губернатором. В Барнауле в честь него и его отца названа улица.",
+    show:"Фролов (П. К. Фролов)", keys:["фролов"] },
+  { id:22, rubric:2, points:2, type:'text',
+    text:"Советский и российский актёр театра и кино, народный артист РСФСР, известен по ролям в фильмах «Бумбараш», «Маленькие трагедии». Родился в селе Быстрый Исток Алтайского края. Его именем назван Молодёжный театр в Барнауле.",
+    show:"Золотухин (В. С. Золотухин)", keys:["золотухин"] },
+  { id:23, rubric:2, points:2, type:'text',
+    text:"Участник Великой Отечественной войны, разведчик и связист, кавалер двух орденов Красной Звезды. Стал прообразом памятника советским воинам-освободителям «Алёша» в болгарском городе Пловдив. Родился в селе Налобиха Косихинского района.",
+    show:"Скурлатов (Алексей Скурлатов)", keys:["скурлатов"] },
+  { id:24, rubric:2, points:2, type:'text',
+    text:"Дважды Герой Советского Союза, единственный в Алтайском крае обладатель двух Золотых Звёзд. Родился в селе Гоньба, вырос в Барнауле. Совершил более 200 боевых вылетов.",
+    show:"Плотников (П. А. Плотников)", keys:["плотников"] },
+  { id:25, rubric:2, points:2, type:'text',
+    text:"Герой Советского Союза, лётчик-штурмовик, чей самолёт враги прозвали «чёрной смертью». Родился в селе Шелаболиха Алтайского края. В Барнауле его именем названа одна из крупных магистралей, проходящая через три района города.",
+    show:"Малахов (Н. М. Малахов)", keys:["малахов"] },
+  { id:26, rubric:2, points:2, type:'text',
+    text:"Герой Советского Союза, полковник, отличился при обороне Москвы, был начальником штаба дивизии. Погиб в бою 26 июля 1944 года. Его именем названа одна из главных улиц Ленинского района Барнаула.",
+    show:"Юрин (А. Н. Юрин)", keys:["юрин"] },
+  { id:27, rubric:2, points:2, type:'text',
+    text:"Герой Советского Союза, гвардии капитан, родился в Барнауле в 1909 году на той самой улице, которая теперь носит его имя. Участвовал в освобождении городов России, Белоруссии, Прибалтики.",
+    show:"Петров (Антон Петров)", keys:["петров"] },
+  { id:28, rubric:2, points:2, type:'text',
+    text:"Известный советский поэт, автор текстов песен «Позвони мне, позвони», «Мгновения», «Притяжение Земли». Родился в селе Косиха Алтайского края.",
+    show:"Рождественский (Р. И. Рождественский)", keys:["рождественский"] },
+  { id:29, rubric:2, points:2, type:'text',
+    text:"Советский поэт, прозаик, драматург, краевед. Автор повести «Голубая дама» и оперетты по ней, ставшей «визитной карточкой» Алтайского театра музыкальной комедии. Почётный гражданин Барнаула и Алтайского края.",
+    show:"Юдалевич (Марк Юдалевич)", keys:["юдалевич"] },
+  { id:30, rubric:2, points:2, type:'text',
+    text:"Младший сержант, Герой Советского Союза посмертно. Родился в деревне Касмала Павловского района Алтайского края. В бою у города Яссы противотанковой гранатой уничтожил вражескую пушку вместе с расчётом, при этом погиб сам. В Барнауле его именем названа улица.",
+    show:"Исаков (Георгий Исаков)", keys:["исаков"] },
+
+  /* --- Рубрика III: 10 вопросов по 4 балла --- */
+  { id:31, rubric:3, points:4, type:'tf',
+    text:"Герман Титов до сих пор остаётся самым молодым человеком, побывавшим в космосе.",
+    correct:"Правда", note:"" },
+  { id:32, rubric:3, points:4, type:'tf',
+    text:"Михаил Калашников родился в селе Курья Алтайского края, и в центре этого села ему установлен бюст.",
+    correct:"Правда", note:"" },
+  { id:33, rubric:3, points:4, type:'tf',
+    text:"Элеватор «Мастодонт», построенный Юрием Кондратюком в Камне-на-Оби без единого гвоздя, рухнул через два года после строительства, что и стало причиной ареста конструктора.",
+    correct:"Ложь", note:"Элеватор простоял больше 60 лет и сгорел в 1990-х годах." },
+  { id:34, rubric:3, points:4, type:'tf',
+    text:"Танк Т-90, созданный конструктором Владимиром Поткиным, уроженцем села Калманка Алтайского края, получил официальное имя «Владимир» — в честь своего создателя.",
+    correct:"Правда", note:"" },
+  { id:35, rubric:3, points:4, type:'tf',
+    text:"Василий Шукшин был актёром-самоучкой и никогда не учился во ВГИКе.",
+    correct:"Ложь", note:"Шукшин учился во ВГИКе (мастерская М. И. Ромма)." },
+  { id:36, rubric:3, points:4, type:'tf',
+    text:"Раиса Горбачёва, жена первого президента СССР, родилась в городе Рубцовске Алтайского края.",
+    correct:"Правда", note:"" },
+  { id:37, rubric:3, points:4, type:'tf',
+    text:"Писатель Виталий Бианки в годы Гражданской войны жил на Алтае под фамилией Белянин и был одним из основателей Бийского краеведческого музея.",
+    correct:"Правда", note:"" },
+  { id:38, rubric:3, points:4, type:'tf',
+    text:"Валентина Терешкова, первая в мире женщина, побывавшая в космосе, приземлилась на территории Алтайского края.",
+    correct:"Правда", note:"" },
+  { id:39, rubric:3, points:4, type:'tf',
+    text:"В честь Алексея Скурлатова, уроженца Косихинского района Алтайского края, который послужил прототипом памятника «Алёша», назван кратер на Луне.",
+    correct:"Ложь", note:"Кратер на Луне назван в честь Германа Титова." },
+  { id:40, rubric:3, points:4, type:'tf',
+    text:"Алтайский поэт и драматург Марк Юдалевич является автором пьесы, посвящённой изобретателю Ивану Ползунову, и первым редактором журнала «Барнаул».",
+    correct:"Ложь", note:"" }
+];
+
+/* ============================ КОНСТАНТЫ ============================ */
+
+const LETTERS = ['A','B','C','D'];
+const QUESTION_TIME = 30;
+
+/* Цвета команд: main — основной, soft — фон, border — рамка */
+const TEAM_PALETTE = [
+  { main:'#1d7a6c', soft:'#e9f6f2', border:'#a8d9cd' }, // бирюзовый
+  { main:'#2f6bb0', soft:'#eaf1fa', border:'#b6cdea' }, // синий
+  { main:'#a0522d', soft:'#fdf1ea', border:'#e8c4b0' }, // терракотовый
+  { main:'#7b3fa8', soft:'#f3eefa', border:'#d0c0e8' }, // фиолетовый
+  { main:'#c0392b', soft:'#fdecea', border:'#f0b8b2' }, // красный
+  { main:'#b8860b', soft:'#fdf8e6', border:'#ecd98a' }  // золотой
+];
+
+const RUBRIC = {
+  1: { label:'Рубрика I',  points:1, cls:'r1', color:'#1b5e8a' },
+  2: { label:'Рубрика II', points:2, cls:'r2', color:'#1d7a6c' },
+  3: { label:'Рубрика III',points:4, cls:'r3', color:'#5b3fa8' }
+};
+
+/* ============================ СОСТОЯНИЕ ============================ */
+
+const state = {
+  teams: [],
+  turn: 0,
+  used: new Set(),
+  currentQ: null,
+  resolved: false,
+  lastVerdict: null,
+  timerId: null,
+  deadline: 0
+};
+
+/* ============================ УТИЛИТЫ ============================ */
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function ballWord(n){
+  if (n === 1) return 'балл';
+  if (n >= 2 && n <= 4) return 'балла';
+  return 'баллов';
+}
+function teamColor(i){
+  return TEAM_PALETTE[i % TEAM_PALETTE.length];
+}
+
+/* ============================ СТАРТОВЫЙ ЭКРАН ============================ */
+
+function renderNameInputs(count){
+  const container = document.getElementById('nameInputs');
+  let html = '';
+  for (let i = 0; i < count; i++){
+    const c = teamColor(i);
+    html += `<label>
+      <span><span class="dot" style="background:${c.main}"></span>Команда ${i + 1}</span>
+      <input id="teamName${i}" value="Команда ${i + 1}" maxlength="22" autocomplete="off"
+             style="border-left-color:${c.main}">
+    </label>`;
+  }
+  container.innerHTML = html;
+}
+
+/* ============================ СТАРТ ИГРЫ ============================ */
+
+function startGame(){
+  const count = Number(document.getElementById('teamCount').value);
+
+  const names = [];
+  for (let i = 0; i < count; i++){
+    const inp = document.getElementById('teamName' + i);
+    names.push(((inp && inp.value.trim()) || 'Команда ' + (i + 1)).slice(0, 22));
+  }
+
+  state.teams = names.map(name => ({
+    name,
+    score: 0,
+    correct: 0,
+    wrong: 0,
+    noanswer: 0,
+    timeout: 0
+  }));
+  state.turn = 0;
+  state.used = new Set();
+  state.currentQ = null;
+  state.resolved = false;
+  state.lastVerdict = null;
+  stopTimer();
+
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('resultScreen').classList.add('hidden');
+  document.getElementById('gameScreen').classList.remove('hidden');
+
+  showBoard();
+}
+
+/* ============================ ТАБЛО ============================ */
+
+function renderScoreboard(){
+  const sb = document.getElementById('scoreboard');
+  sb.innerHTML = state.teams.map((t, i) => {
+    const c = teamColor(i);
+    const active = (i === state.turn);
+    const scoreStr = (t.score > 0 ? '+' : '') + t.score;
+    return `<div class="team-card ${active ? 'active' : ''}"
+                 style="--tc:${c.main};--tsoft:${c.soft};">
+      <div class="tname">${escapeHtml(t.name)}</div>
+      <div class="tscore ${t.score < 0 ? 'neg' : ''}">${scoreStr}</div>
+      <div class="tstatus">ход команды</div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================ ДОСКА ============================ */
+
+function showBoard(){
+  document.getElementById('questionView').classList.add('hidden');
+  document.getElementById('boardView').classList.remove('hidden');
+  renderScoreboard();
+  renderTurnHint();
+  renderBoard();
+}
+
+function renderTurnHint(){
+  const team = state.teams[state.turn];
+  const c = teamColor(state.turn);
+  const hint = document.getElementById('turnHint');
+  hint.innerHTML = `Ход команды <b>${escapeHtml(team.name)}</b> — выберите вопрос на доске`
+    + `<span style="opacity:.75;font-weight:600"> · отвечено ${state.used.size} из ${QUESTIONS.length}</span>`;
+  hint.style.background = c.soft;
+  hint.style.color = c.main;
+  hint.style.borderColor = c.border;
+}
+
+function renderBoard(){
+  const boardEl = document.getElementById('board');
+  let html = '';
+
+  [1,2,3].forEach(rub => {
+    const qs = QUESTIONS.filter(q => q.rubric === rub);
+    const r = RUBRIC[rub];
+
+    html += `<section class="board-section">
+      <header class="board-head" style="border-left-color:${r.color}">
+        <span class="bs-title" style="color:${r.color}">${r.label}</span>
+        <span class="bs-meta">${r.points} ${ballWord(r.points)} · ${qs.length} вопросов</span>
+      </header>
+      <div class="cells">`;
+
+    qs.forEach(q => {
+      const used = state.used.has(q.id);
+      html += `<button class="cell ${r.cls}${used ? ' used' : ''}" data-id="${q.id}" ${used ? 'disabled' : ''}>
+        <span class="num">${q.id}</span>
+        <span class="pts">${used ? '✓' : '+' + q.points}</span>
+      </button>`;
+    });
+
+    html += `</div></section>`;
+  });
+
+  boardEl.innerHTML = html;
+
+  boardEl.querySelectorAll('.cell:not(.used)').forEach(btn => {
+    btn.addEventListener('click', () => openQuestion(Number(btn.dataset.id)));
+  });
+}
+
+/* ============================ ОТКРЫТИЕ ВОПРОСА ============================ */
+
+function openQuestion(id){
+  const q = QUESTIONS.find(x => x.id === id);
+  if (!q || state.used.has(id)) return;
+
+  state.currentQ = q;
+  state.resolved = false;
+  state.lastVerdict = null;
+
+  document.getElementById('boardView').classList.add('hidden');
+  const view = document.getElementById('questionView');
+  view.classList.remove('hidden');
+
+  renderQuestion(q);
+  window.scrollTo({ top:0, behavior:'smooth' });
+  startTimer();
+}
+
+function renderQuestion(q){
+  const team = state.teams[state.turn];
+  const c = teamColor(state.turn);
+  const r = RUBRIC[q.rubric];
+
+  /* --- изображение для рубрики I --- */
+  let imageHTML = '';
+  if (q.type === 'mc' && q.rubric === 1){
+    if (q.image){
+      imageHTML = `<div class="q-image-wrap">
+        <img class="q-image" src="${escapeHtml(q.image)}" alt="Фото к вопросу ${q.id}">
+      </div>`;
+    } else {
+      imageHTML = `<div class="q-image-wrap">
+        <div class="q-image-placeholder">
+          <b>Фото не добавлено</b><br>
+          Укажите URL в поле <code>image</code> вопроса №${q.id} в коде викторины.
+        </div>
+      </div>`;
+    }
+  }
+
+  let answerHTML = '';
+  if (q.type === 'mc'){
+    answerHTML = '<div class="options" id="options">' +
+      q.options.map((o, j) =>
+        `<div class="opt" data-i="${j}"><span class="ltr">${LETTERS[j]}</span><span>${escapeHtml(o)}</span></div>`
+      ).join('') + '</div>';
+  } else if (q.type === 'tf'){
+    answerHTML = '<div class="options row" id="options">' +
+      ['Правда','Ложь'].map(v => `<div class="opt" data-v="${v}">${v}</div>`).join('') +
+      '</div>';
+  } else {
+    answerHTML = `<div class="open-answer-hint">Ведущий принимает устный ответ и нажимает вердикт</div>`;
+  }
+
+  const view = document.getElementById('questionView');
+  view.innerHTML = `
+    <div class="q-head">
+      <span class="q-counter">Вопрос ${q.id} из ${QUESTIONS.length}</span>
+      <span class="badge ${r.cls}">${r.label} · ${q.points} ${ballWord(q.points)}</span>
+    </div>
+
+    <div class="turn-banner" style="background:${c.soft};color:${c.main};border-color:${c.border}">
+      Отвечает: <b>${escapeHtml(team.name)}</b>
+    </div>
+
+    <div class="timer-wrap">
+      <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+      <div class="timer-num" id="timerNum">${QUESTION_TIME}</div>
+    </div>
+
+    <p class="q-text">${escapeHtml(q.text)}</p>
+
+    ${imageHTML}
+
+    <div id="answerArea">${answerHTML}</div>
+    <div id="revealBox" class="reveal-box hidden"></div>
+
+    <div class="verdict-bar" id="verdictBar">
+      <button type="button" class="vbtn v-correct" data-v="correct">✅ Верно <span>+${q.points}</span></button>
+      <button type="button" class="vbtn v-wrong" data-v="wrong">❌ Неверно</button>
+      <button type="button" class="vbtn v-noanswer" data-v="noanswer">🚫 Нет ответа</button>
+    </div>
+
+    <div class="reveal-row" id="revealRow">
+      <button type="button" class="reveal-btn" id="revealBtn">👁 Показать правильный ответ</button>
+    </div>
+
+    <div class="feedback hidden" id="feedback"></div>
+
+    <div class="q-actions hidden" id="backActions">
+      <button type="button" class="btn primary" id="backBtn">Вернуться к доске</button>
+      <button type="button" class="undo-link" id="undoBtn">✏️ Изменить вердикт</button>
+    </div>
+  `;
+
+  view.querySelectorAll('.vbtn').forEach(b => {
+    b.addEventListener('click', () => resolveVerdict(b.dataset.v));
+  });
+  document.getElementById('revealBtn').addEventListener('click', () => revealAnswer(q));
+  document.getElementById('backBtn').addEventListener('click', backToBoard);
+  document.getElementById('undoBtn').addEventListener('click', undoVerdict);
+}
+
+/* ============================ ТАЙМЕР ============================ */
+
+function startTimer(){
+  stopTimer();
+  state.deadline = Date.now() + QUESTION_TIME * 1000;
+  tick();
+  state.timerId = setInterval(tick, 100);
+}
+
+function stopTimer(){
+  if (state.timerId){
+    clearInterval(state.timerId);
+    state.timerId = null;
+  }
+}
+
+function tick(){
+  if (state.resolved) return;
+
+  const left = Math.max(0, (state.deadline - Date.now()) / 1000);
+  const fill = document.getElementById('timerFill');
+  const num  = document.getElementById('timerNum');
+
+  if (fill && num){
+    fill.style.width = (left / QUESTION_TIME * 100) + '%';
+    num.textContent = Math.ceil(left);
+    fill.classList.toggle('warn',   left <= 10 && left > 5);
+    fill.classList.toggle('danger', left <= 5);
+    num.classList.toggle('danger',  left <= 5);
+  }
+
+  if (left <= 0){
+    stopTimer();
+    resolveVerdict('timeout');
+  }
+}
+
+/* ============================ ПОКАЗ ПРАВИЛЬНОГО ОТВЕТА ============================ */
+
+function revealAnswer(q){
+  const box = document.getElementById('revealBox');
+  const btn = document.getElementById('revealBtn');
+  if (!box) return;
+  if (!box.classList.contains('hidden')) return;
+
+  let html = '';
+  if (q.type === 'mc'){
+    html = `Правильный ответ: <b>${LETTERS[q.correct]}) ${escapeHtml(q.options[q.correct])}</b>`;
+    document.querySelectorAll('#answerArea .opt').forEach(el => {
+      if (Number(el.dataset.i) === q.correct) el.classList.add('correct');
+    });
+  } else if (q.type === 'tf'){
+    html = `Правильный ответ: <b>${q.correct}</b>`;
+    document.querySelectorAll('#answerArea .opt').forEach(el => {
+      if (el.dataset.v === q.correct) el.classList.add('correct');
+    });
+    if (q.note) html += `<div class="note">${q.note}</div>`;
+  } else {
+    html = `Правильный ответ: <b>${escapeHtml(q.show)}</b>`;
+  }
+
+  box.innerHTML = html;
+  box.classList.remove('hidden');
+
+  if (btn){
+    btn.disabled = true;
+    btn.textContent = '✓ Ответ показан';
+  }
+}
+
+/* ============================ ВЕРДИКТ ============================ */
+
+function resolveVerdict(kind){
+  if (state.resolved) return;
+  state.resolved = true;
+  state.lastVerdict = kind;
+  stopTimer();
+
+  const q = state.currentQ;
+  const team = state.teams[state.turn];
+
+  let fbClass = 'feedback show';
+  let fbHTML = '';
+
+  if (kind === 'correct'){
+    team.score += q.points;
+    team.correct++;
+    fbClass += ' ok';
+    fbHTML = `✅ Верно! <b>${escapeHtml(team.name)}</b> получает +${q.points} ${ballWord(q.points)}.`;
+  } else if (kind === 'wrong'){
+    team.wrong++;
+    fbClass += ' bad';
+    fbHTML = `❌ Неверно. Баллы не начислены.`;
+  } else if (kind === 'noanswer'){
+    team.noanswer++;
+    fbClass += ' neutral';
+    fbHTML = `🚫 Нет ответа. Баллы не начислены.`;
+  } else if (kind === 'timeout'){
+    team.timeout++;
+    fbClass += ' neutral';
+    fbHTML = `⏰ Время вышло! Баллы не начислены.`;
+  }
+
+  state.used.add(q.id);
+  revealAnswer(q);
+
+  const fb = document.getElementById('feedback');
+  fb.className = fbClass;
+  fb.innerHTML = fbHTML;
+
+  document.getElementById('verdictBar').classList.add('hidden');
+  document.getElementById('revealRow').classList.add('hidden');
+  document.getElementById('backActions').classList.remove('hidden');
+
+  renderScoreboard();
+}
+
+function undoVerdict(){
+  if (!state.resolved) return;
+
+  const q = state.currentQ;
+  const team = state.teams[state.turn];
+
+  if (state.lastVerdict === 'correct'){
+    team.score -= q.points;
+    team.correct--;
+  } else if (state.lastVerdict === 'wrong'){
+    team.wrong--;
+  } else if (state.lastVerdict === 'noanswer'){
+    team.noanswer--;
+  } else if (state.lastVerdict === 'timeout'){
+    team.timeout--;
+  }
+
+  state.used.delete(q.id);
+  state.resolved = false;
+  state.lastVerdict = null;
+
+  document.getElementById('verdictBar').classList.remove('hidden');
+  document.getElementById('revealRow').classList.remove('hidden');
+  document.getElementById('backActions').classList.add('hidden');
+
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback hidden';
+  fb.innerHTML = '';
+
+  document.querySelectorAll('#answerArea .opt.correct').forEach(el => el.classList.remove('correct'));
+
+  renderScoreboard();
+}
+
+/* ============================ ВОЗВРАТ К ДОСКЕ ============================ */
+
+function backToBoard(){
+  state.currentQ = null;
+  state.resolved = false;
+  state.lastVerdict = null;
+  stopTimer();
+
+  if (state.used.size >= QUESTIONS.length){
+    showResults();
+    return;
+  }
+
+  state.turn = (state.turn + 1) % state.teams.length;
+  showBoard();
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+/* ============================ ФИНАЛ ============================ */
+
+function showResults(){
+  stopTimer();
+  document.getElementById('gameScreen').classList.add('hidden');
+
+  const teams = state.teams;
+  const maxScore = Math.max(...teams.map(t => t.score));
+  const winners = teams.filter(t => t.score === maxScore);
+
+  let winnerHTML;
+  if (teams.length === 0){
+    winnerHTML = 'Нет команд';
+  } else if (winners.length === 1){
+    winnerHTML = `🏆 Победила «${escapeHtml(winners[0].name)}»!`;
+  } else {
+    winnerHTML = `🤝 Ничья: ${winners.map(t => `«${escapeHtml(t.name)}»`).join(', ')}!`;
+  }
+
+  const teamBlock = (t, i) => {
+    const c = teamColor(i);
+    return `
+      <div class="final-team" style="--tc:${c.main};--tsoft:${c.soft};">
+        <div class="ft-name">${escapeHtml(t.name)}</div>
+        <div class="ft-score">${(t.score > 0 ? '+' : '') + t.score}</div>
+        <div class="ft-stats">Верно: ${t.correct} · Ошибки: ${t.wrong} · Нет ответа: ${t.noanswer} · Время: ${t.timeout}</div>
+      </div>`;
+  };
+
+  const res = document.getElementById('resultScreen');
+  res.innerHTML = `
+    <h2 style="margin-top:0;text-align:center;color:var(--brand)">Игра завершена!</h2>
+    <p class="winner">${winnerHTML}</p>
+    <div class="final-scores">${teams.map(teamBlock).join('')}</div>
+    <div class="q-actions" style="justify-content:center">
+      <button class="btn primary" id="againBtn">Играть заново</button>
+    </div>
+  `;
+  res.classList.remove('hidden');
+
+  document.getElementById('againBtn').addEventListener('click', () => {
+    res.classList.add('hidden');
+    document.getElementById('startScreen').classList.remove('hidden');
+    window.scrollTo({ top:0, behavior:'smooth' });
+  });
+
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+/* ============================ ОБРАБОТЧИКИ ============================ */
+
+document.getElementById('teamCount').addEventListener('change', (e) => {
+  renderNameInputs(Number(e.target.value));
+});
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+
+document.getElementById('endGameBtn').addEventListener('click', () => {
+  if (confirm('Завершить игру досрочно и показать результаты?')) showResults();
+});
+
+/* ============================ ИНИЦИАЛИЗАЦИЯ ============================ */
+
+renderNameInputs(Number(document.getElementById('teamCount').value));
+</script>
+
+</body>
+</html>
